@@ -28,11 +28,16 @@ module.exports = function( sequelize ) {
             type: DataTypes.DATE,
             allowNull: false,
         },
-        created_at: {
-            type: DataTypes.STRING,
+        createdAt: {
+            type: DataTypes.DATE,
             allowNull: false,
             unique: true
         },
+        updatedAt: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            unique: true
+        }
       }, {
         tableName: 'users'
       });
