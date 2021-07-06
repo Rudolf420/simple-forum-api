@@ -4,10 +4,17 @@ const database = require('./database.js');
 const express = require("express");
 const bcrypt = require("bcrypt");
 const { user } = require('./database.js');
+const passport = require("passport");
+
+const initializePassport = require("./passportConfig");
 
 const PORT = process.env.PORT || 3001;
 
+initializePassport(passport)
+
 const app = express();
+
+app.use(passport.initialize())
 
 app.use(express.urlencoded({
     extended: true
@@ -17,8 +24,6 @@ app.use(express.urlencoded({
 app.use(express.json());
 
 app.get("/api", async (req, res) => {
-  let User = database.user
-  await User.create({ username: "tester1", e_mail: "test1@test.com", password: "test", registration_date: new Date().toLocaleString(), createdAt: new Date().toLocaleString(), updatedAt: new Date().toLocaleString() });
   res.status(200).send('Everything ok');
 });
 
@@ -74,6 +79,13 @@ app.post("/users/register", async (req, res) => {
 }
 
   res.status(200).send('Everything ok');
+});
+
+app.post('/users/login', function(req, res, next) {
+  passport.authenticate('local', function(err, user, info) {
+    if (user) { return res.status(200).json(user.id); }
+    if (!user) { return res.status(400).send(info); }
+  })(req, res, next);
 });
 
 app.listen(PORT, () => {

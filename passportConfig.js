@@ -8,7 +8,7 @@ function initialize(passport) {
 
         let User = database.user;
 
-        User.findOne({ where: {username: username} }).then(user => {
+        User.findOne({ where: {e_mail: e_mail} }).then(user => {
             if ( user ) {
               bcrypt.compare(password, user.password, (err, isMatch) => {
                   if(err) {
@@ -42,10 +42,21 @@ function initialize(passport) {
     )
     );
 
-    passport.serializeuser((user, done) => done(null, user.id));
-    passport.deserializeuser((id, done) => {
+    passport.serializeUser((user, done) => done(null, user.id));
+    passport.deserializeUser((id, done) => {
         let User = database.user;
 
-        
+        User.findOne({ where: {id: id} }).then(user => {
+            if ( user ) {
+              return done(null, user)
+            }
+            else{
+                console.log(`not found while serialization`);
+            }
+          });
+
+
     })
 }
+
+module.exports = initialize;
