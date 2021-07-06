@@ -3,6 +3,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
 const database = require('./database.js');
 const express = require("express");
 const bcrypt = require("bcrypt");
+const { user } = require('./database.js');
 
 const PORT = process.env.PORT || 3001;
 
@@ -13,10 +14,10 @@ app.use(express.urlencoded({
   })
 );
 
-app.use(express.json())
+app.use(express.json());
 
 app.get("/api", async (req, res) => {
-  User = database.user
+  let User = database.user
   await User.create({ username: "tester1", e_mail: "test1@test.com", password: "test", registration_date: new Date().toLocaleString(), createdAt: new Date().toLocaleString(), updatedAt: new Date().toLocaleString() });
   res.status(200).send('Everything ok');
 });
@@ -36,14 +37,45 @@ app.post("/users/register", async (req, res) => {
 
   if (err.length > 0){
     res.status(400).json({ errors : err });
-  } else {
+  
+  } 
+  else {
+
     let hashedPw = await bcrypt.hash(password, 10);
+    let User = database.user
+
+    User.findOne({ where: {username: username} }).then(user => {
+      if ( user ) {
+        err.push({ message : 'Username already taken' });
+      }
+    });
+
+    User.findOne({ where: {e_mail: e_mail} }).then(user => {
+      if ( user ) {
+        err.push({ message : 'E-mail already used' });
+      }
+    });
+
+    if (err.length > 0){
+      res.status(400).json({ errors : err });
+    
+    } else {
+
+    await User.create({ 
+      username: username, 
+      e_mail: e_mail, 
+      password: hashedPw, 
+      registration_date: new Date().toLocaleString(), 
+      createdAt: new Date().toLocaleString(), 
+      updatedAt: new Date().toLocaleString() 
+    
+    });
   }
+}
 
-
+  res.status(200).send('Everything ok');
 });
 
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
 });
-
