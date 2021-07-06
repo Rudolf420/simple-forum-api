@@ -13,6 +13,8 @@
   "dependencies": {
     "bcrypt": "^5.0.1",
     "express": "^4.17.1",
+    "passport": "^0.4.1",
+    "passport-local": "^1.0.0",
     "pg": "^8.6.0",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.6.4",
