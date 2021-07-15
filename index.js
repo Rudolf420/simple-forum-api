@@ -6,10 +6,15 @@ const bcrypt = require("bcrypt");
 const { user } = require('./database.js');
 const passport = require("passport");
 const session = require("express-session")
-
+const sequelize = require('./dbConfig.js');
+var SequelizeStore = require("connect-session-sequelize")(session.Store);
 const initializePassport = require("./passportConfig");
 
 const PORT = process.env.PORT || 3001;
+
+var sessionStore = new SequelizeStore({
+  db: sequelize,
+});
 
 initializePassport(passport)
 
@@ -26,18 +31,37 @@ app.use(session(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 1000*60*60*12,
-    }
+      maxAge: 1000*60*60
+    },
+    store: sessionStore
   }
 ))
+
+sessionStore.sync()
+
 app.use(express.json());
 
 app.use(passport.initialize())
 app.use(passport.session())
 
+const isAuth = (req, res) => {
+  if(req.session.userId) {
+    console.log(req.session)
+    return true;
+  }
+  else {
+    console.log(req.session)
+    return false;
+  }
+}
+
 app.get("/api", async (req, res) => {
-  res.status(200).send('Everything ok');
-  console.log(req.session.id)
+  if(isAuth(req, res)){
+    res.status(200).send('Logged');
+  }
+  else{
+    res.status(400).send('Not logged');
+  }
 });
 
 app.post("/users/register", async (req, res) => {
@@ -96,8 +120,13 @@ app.post("/users/register", async (req, res) => {
 
 app.post('/users/login', function(req, res, next) {
   passport.authenticate('local', function(err, user, info) {
-    if (user) { return res.status(200).json(user.id); }
-    if (!user) { return res.status(400).send(info); }
+    if (user) { 
+      req.session.userId = user.id; 
+      return res.status(200).json(user.id); 
+    }
+    if (!user) { 
+      return res.status(400).send(info);
+     }
   })(req, res, next);
 });
 
