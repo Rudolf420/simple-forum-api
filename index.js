@@ -130,6 +130,11 @@ app.post('/users/login', function(req, res, next) {
   })(req, res, next);
 });
 
+app.get('/users/logout',(req,res) => {
+  req.session.destroy();
+  res.redirect('/api');
+});
+
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
 });
