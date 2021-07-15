@@ -5,6 +5,7 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const { user } = require('./database.js');
 const passport = require("passport");
+const session = require("express-session")
 
 const initializePassport = require("./passportConfig");
 
@@ -14,17 +15,29 @@ initializePassport(passport)
 
 const app = express();
 
-app.use(passport.initialize())
-
 app.use(express.urlencoded({
     extended: true
   })
 );
 
+app.use(session(
+  { 
+    secret: 'secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 1000*60*60*12,
+    }
+  }
+))
 app.use(express.json());
+
+app.use(passport.initialize())
+app.use(passport.session())
 
 app.get("/api", async (req, res) => {
   res.status(200).send('Everything ok');
+  console.log(req.session.id)
 });
 
 app.post("/users/register", async (req, res) => {
