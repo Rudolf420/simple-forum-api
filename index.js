@@ -53,7 +53,7 @@ const isAuth = (req, res) => {
     console.log(req.session)
     return false;
   }
-}
+};
 
 app.get("/api", async (req, res) => {
   if(isAuth(req, res)){
