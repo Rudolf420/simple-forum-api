@@ -1,37 +1,11 @@
-const email_validator = require("email-validator");
-
 module.exports = {
-    validateUserInput: async (req) => {
-        let errors = [];
-        let { username, e_mail, password, password2 } = req.body;
-        
-        if (!username || !e_mail || !password || !password2) {
-            errors.push({message: "Please enter all fields"});
-        }
-        
-        if (password != password2) {
-            errors.push({message: "Passwords do not match"});
-        }
     
-        if(!(email_validator.validate(e_mail))){
-            errors.push({message: "Invalid e-mail address"});
-        }
-    
-        return errors;
-    },
-
     validatePost: (req) => {
-        let errors = [];
+        
+        req.checkBody('title', 'Title is required').notEmpty();
+        req.checkBody('text', 'Text is required').notEmpty();
 
-        let { title, text } = req.body;
-    
-        if ( !title ){
-            errors.push({message: "Title is required"});
-        }
-    
-        if ( !text ){
-            errors.push({message: "Please enter some text"});
-        }
+        let errors = req.validationErrors();
     
         return errors;
     },
@@ -54,5 +28,20 @@ module.exports = {
         });
         
         return errors;
-    }
+    },
+
+    validateUserInput: (req) => {
+
+        req.checkBody('username', 'Username is required').notEmpty();
+        req.checkBody('e_mail', 'E-mail is required').notEmpty();
+        req.checkBody('password', 'Password is required').notEmpty();
+        req.checkBody('password2', 'Password confirmation is required').notEmpty();
+        req.checkBody('e_mail', 'E-mail is not valid').isEmail();
+        req.checkBody('password2', 'Passwords do not match').equals(req.body.password);
+
+        let errors = req.validationErrors();
+
+        return errors;
+
+    } 
 }

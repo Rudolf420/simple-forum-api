@@ -8,8 +8,8 @@ const session = require("express-session")
 const sequelize = require('./dbConfig.js');
 const SequelizeStore = require("connect-session-sequelize")(session.Store);
 const initializePassport = require("./passportConfig");
-const validator = require('./validator.js');
-
+const expressValidator = require('express-validator');
+const validator = require('./validator.js')
 const PORT = process.env.PORT || 3001;
 
 const sessionStore = new SequelizeStore({
@@ -39,8 +39,8 @@ app.use(session(
 
 sessionStore.sync()
 
+app.use(expressValidator());
 app.use(express.json());
-
 app.use(passport.initialize())
 app.use(passport.session())
 
