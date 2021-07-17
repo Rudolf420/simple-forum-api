@@ -28,17 +28,9 @@ module.exports = function( sequelize ) {
             type: DataTypes.DATE,
             allowNull: false,
         },
-        createdAt: {
-            type: DataTypes.DATE,
-            allowNull: false,
-            unique: true
-        },
-        updatedAt: {
-            type: DataTypes.DATE,
-            allowNull: false,
-            unique: true
-        }
+        
       }, {
-        tableName: 'users'
+        tableName: 'users',
+        timestamps: false
       });
 };

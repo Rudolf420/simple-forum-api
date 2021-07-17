@@ -3,16 +3,16 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
 const database = require('./database.js');
 const express = require("express");
 const bcrypt = require("bcrypt");
-const { user } = require('./database.js');
 const passport = require("passport");
 const session = require("express-session")
 const sequelize = require('./dbConfig.js');
-var SequelizeStore = require("connect-session-sequelize")(session.Store);
+const SequelizeStore = require("connect-session-sequelize")(session.Store);
 const initializePassport = require("./passportConfig");
+const validator = require('./validator.js');
 
 const PORT = process.env.PORT || 3001;
 
-var sessionStore = new SequelizeStore({
+const sessionStore = new SequelizeStore({
   db: sequelize,
 });
 
@@ -66,73 +66,77 @@ app.get("/api", async (req, res) => {
 
 app.post("/users/register", async (req, res) => {
   
-  let { username, e_mail, password, password2} = req.body;
-  let err = []; 
+  let { username, e_mail, password} = req.body;
   
-  if (!username, !e_mail, !password, !password2) {
-    err.push({message: "Please enter all fields"});
-  }
-
-  if (password != password2) {
-    err.push({message: "Passwords do not match"});
-  }
+  let err = validator.validateUserInput(req);
 
   if (err.length > 0){
     res.status(400).json({ errors : err });
   
   } 
-  else {
+  else {    
+    let User = database.user;
 
-    let hashedPw = await bcrypt.hash(password, 10);
-    let User = database.user
-
-    User.findOne({ where: {username: username} }).then(user => {
-      if ( user ) {
-        err.push({ message : 'Username already taken' });
-      }
-    });
-
-    User.findOne({ where: {e_mail: e_mail} }).then(user => {
-      if ( user ) {
-        err.push({ message : 'E-mail already used' });
-      }
-    });
+    err = await validator.validateUser(User, req);
 
     if (err.length > 0){
       res.status(400).json({ errors : err });
     
     } else {
+      let hashedPw = await bcrypt.hash(password, 10);
 
-    await User.create({ 
-      username: username, 
-      e_mail: e_mail, 
-      password: hashedPw, 
-      registration_date: new Date().toLocaleString(), 
-      createdAt: new Date().toLocaleString(), 
-      updatedAt: new Date().toLocaleString() 
-    
+      await User.create({ 
+        username: username, 
+        e_mail: e_mail, 
+        password: hashedPw, 
+        registration_date: new Date()  
     });
+
+    res.status(200).send('User registered');
   }
 }
 
-  res.status(200).send('Everything ok');
+  
 });
 
 app.post('/users/login', function(req, res, next) {
   passport.authenticate('local', function(err, user, info) {
-    if (user) { 
+    if ( user ) { 
       req.session.userId = user.id; 
       return res.status(200).json(user.id); 
     }
-    if (!user) { 
+    if ( !user ) { 
       return res.status(400).send(info);
      }
   })(req, res, next);
 });
 
-app.get('/users/logout',(req,res) => {
+app.get('/users/logout', (req,res) => {
   req.session.destroy();
   res.redirect('/api');
+});
+
+app.post('/posts/create', async (req, res) => {
+  let err = validator.validatePost(req);
+  
+  if (err.length > 0){
+    res.status(400).json({ errors : err });
+  } 
+  else {
+    let Post = database.post;
+    let { title, text, userID, categoryID } = req.body;  
+    await Post.create({ 
+      title: title, 
+      text: text, 
+      userID: userID,
+      categoryID: categoryID,
+      createdAt: new Date(), 
+      updatedAt: new Date() 
+    
+    });
+
+    res.status(200).send('Everything ok');
+  }
 });
 
 app.listen(PORT, () => {
