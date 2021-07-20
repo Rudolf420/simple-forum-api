@@ -9,7 +9,8 @@ const sequelize = require('./dbConfig.js');
 const SequelizeStore = require("connect-session-sequelize")(session.Store);
 const initializePassport = require("./passportConfig");
 const expressValidator = require('express-validator');
-const validator = require('./validator.js')
+const validator = require('./validator.js');
+const { category } = require('./database.js');
 const PORT = process.env.PORT || 3001;
 
 const sessionStore = new SequelizeStore({
@@ -44,7 +45,7 @@ app.use(express.json());
 app.use(passport.initialize())
 app.use(passport.session())
 
-const isAuth = (req, res) => {
+const isAuth = (req) => {
   if(req.session.userId) {
     console.log(req.session)
     return true;
@@ -56,7 +57,7 @@ const isAuth = (req, res) => {
 };
 
 app.get("/api", async (req, res) => {
-  if(isAuth(req, res)){
+  if(isAuth(req)){
     res.status(200).send('Logged');
   }
   else{
@@ -137,6 +138,19 @@ app.post('/posts/create', async (req, res) => {
 
     res.status(200).send('Everything ok');
   }
+});
+
+app.get('/categories/get', (req,res) => {
+  let Category = database.category;
+
+  Category.findAll(
+  ).then(function(Category){
+    console.log(Category);
+    res.send({error:false,message:'users list',data:Category});
+  }).catch(function(err){
+    console.log('Oops! something went wrong, : ', err);
+  });
+  
 });
 
 app.listen(PORT, () => {
