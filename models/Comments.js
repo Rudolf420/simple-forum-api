@@ -1,7 +1,7 @@
 const { Sequelize, DataTypes } = require('sequelize');
 
 module.exports = function( sequelize ) {
-    return sequelize.define('Posts', {
+    return sequelize.define('Comments', {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -9,12 +9,13 @@ module.exports = function( sequelize ) {
             unique: true,
             autoIncrement: true
         },
-        title: {
-            type: DataTypes.TEXT,
+        postid: {
+            type: DataTypes.INTEGER,
             allowNull: false,
-            unique: false
+            references: 'posts', 
+            referencesKey: 'id' 
         },
-        userID: {
+        userid: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: 'users', 
@@ -24,21 +25,13 @@ module.exports = function( sequelize ) {
             type: DataTypes.TEXT,
             allowNull: false,
         },
-        categoryID: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            references: 'categories', 
-            referencesKey: 'id'
-        },
         createdAt: {
             type: DataTypes.DATE,
             allowNull: false,
         },
-        updatedAt: {
-            type: DataTypes.DATE,
-            allowNull: false,
-        }
+
       }, {
-        tableName: 'posts',
+        tableName: 'comments',
+        timestamps: false
       });
 };

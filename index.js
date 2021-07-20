@@ -153,6 +153,26 @@ app.get('/categories/get', (req,res) => {
   
 });
 
+app.post('/posts/comments/create', async(req, res) => {
+  let err = validator.validateComment(req);
+  
+  if (err.length > 0){
+    res.status(400).json({ errors : err });
+  } 
+  else{
+    let Comment = database.comment;
+    let { text, postid, userid } = req.body;  
+    await Comment.create({ 
+      text: text, 
+      userid: userid,
+      postid: postid,
+      createdAt: new Date(), 
+    });
+
+    res.status(200).send('Everything ok');
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
 });
