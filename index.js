@@ -47,11 +47,20 @@ app.use(passport.session())
 
 const isAuth = (req) => {
   if(req.session.userid) {
-    console.log(req.session)
     return true;
   }
   else {
-    console.log(req.session)
+    return false;
+  }
+};
+
+const isCreator = (req) => {
+  console.log(req.session.userid)
+  console.log(req.body.id)
+  if(isAuth(req) && req.session.userid == req.body.id) {
+    return true;
+  }
+  else {
     return false;
   }
 };
@@ -177,6 +186,32 @@ app.post('/posts/comments/create', async(req, res) => {
 
     res.status(200).send('Everything ok');
   }
+});
+
+app.delete('/posts/comments/delete', (req, res) => {
+
+  if(isCreator(req)){
+    let Comment = database.comment;
+    Comment.destroy({
+      where: {
+          id: req.body.id
+      }
+    }).then(function(item){
+      res.json({
+        "Message" : "Comment deleted!",
+        "Item" : item
+      });
+    }).catch(function (err) {
+      console.log(err);
+      res.json({
+        "Message" : "Comment not deleted!",
+        "Err" : err
+      })
+    });
+  }
+  else{
+      res.status(400).send('Not Authorized');
+    }
 });
 
 app.listen(PORT, () => {
