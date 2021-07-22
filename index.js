@@ -36,9 +36,9 @@ app.use(session(
     },
     store: sessionStore
   }
-))
+));
 
-sessionStore.sync()
+sessionStore.sync();
 
 app.use(expressValidator());
 app.use(express.json());
@@ -54,16 +54,17 @@ const isAuth = (req) => {
   }
 };
 
-const isCreator = (req) => {
+const isCreator = (req, params) => {
   console.log(req.session.userid)
   console.log(req.body.id)
-  if(isAuth(req) && req.session.userid == req.body.id) {
+  if(isAuth(req) && req.session.userid == params) {
     return true;
   }
   else {
     return false;
   }
 };
+
 
 app.get("/api", async (req, res) => {
   if(isAuth(req)){
@@ -165,7 +166,7 @@ app.get('/categories/get', (req,res) => {
   
 });
 
-app.post('/posts/comments/create', async(req, res) => {
+app.post('/posts/comments', async(req, res) => {
   let err = validator.validateComment(req);
 
   if(!isAuth(req)){
@@ -188,19 +189,26 @@ app.post('/posts/comments/create', async(req, res) => {
   }
 });
 
-app.delete('/posts/comments/delete', (req, res) => {
+app.delete('/posts/comments/:commentId', (req, res) => {
 
-  if(isCreator(req)){
+  if(isCreator(req, req.params.commentId)){
     let Comment = database.comment;
     Comment.destroy({
       where: {
-          id: req.body.id
+          id: req.params.commentId
       }
     }).then(function(item){
+      if(item > 0){
+        res.json({
+          "Message" : "Comment deleted!",
+          "Item" : item
+        });
+    } else{
       res.json({
-        "Message" : "Comment deleted!",
+        "Message" : "Comment doesnt exist!",
         "Item" : item
       });
+    }
     }).catch(function (err) {
       console.log(err);
       res.json({
@@ -210,7 +218,9 @@ app.delete('/posts/comments/delete', (req, res) => {
     });
   }
   else{
-      res.status(400).send('Not Authorized');
+      res.status(400).json({
+        "Message" : "Not authorized.",
+      })
     }
 });
 
