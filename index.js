@@ -10,7 +10,6 @@ const SequelizeStore = require("connect-session-sequelize")(session.Store);
 const initializePassport = require("./passportConfig");
 const expressValidator = require('express-validator');
 const validator = require('./validator.js');
-const { category } = require('./database.js');
 const PORT = process.env.PORT || 3001;
 
 const sessionStore = new SequelizeStore({
@@ -45,12 +44,14 @@ app.use(express.json());
 app.use(passport.initialize())
 app.use(passport.session())
 
-const isAuth = (req) => {
+function isAuth(req, res, next) {
   if(req.session.userid) {
-    return true;
+    console.log("Is logged");
+    next();
   }
   else {
-    return false;
+    console.log("Not logged");
+    res.status(401).json({message: "Not logged"});
   }
 };
 
@@ -65,14 +66,8 @@ const isCreator = (req, params) => {
   }
 };
 
-
 app.get("/api", async (req, res) => {
-  if(isAuth(req)){
-    res.status(200).send('Logged');
-  }
-  else{
-    res.status(400).send('Not logged');
-  }
+  res.send("vsetko fici")
 });
 
 app.post("/users/register", async (req, res) => {
@@ -114,7 +109,7 @@ app.post('/users/login', function(req, res, next) {
   passport.authenticate('local', function(err, user, info) {
     if ( user ) { 
       req.session.userid = user.id; 
-      return res.status(200).json(user.id); 
+      return res.status(200).json({message:"Logged in", userid:user.id}); 
     }
     if ( !user ) { 
       return res.status(400).send(info);
@@ -123,17 +118,19 @@ app.post('/users/login', function(req, res, next) {
 });
 
 app.get('/users/logout', (req,res) => {
-  req.session.destroy();
-  return res.status(400).send("logout");
+  if(req.session.userid){
+    req.session.destroy();
+    res.status(200).json({message:"User was logged out"});
+  }
+  else{
+    res.status(404).json({message:"User not found logged"});
+  }
 });
 
-app.post('/posts/create', async (req, res) => {
+app.post('/posts', isAuth, async (req, res, next) => {
   let err = validator.validatePost(req);
   
-  if(isAuth(req)){
-    res.status(400).json({ errors : "Not logged" });
-  }
-  else if (err.length > 0){
+  if (err.length > 0){
     res.status(400).json({ errors : err });
   } 
   else {
@@ -146,10 +143,9 @@ app.post('/posts/create', async (req, res) => {
       categoryID: categoryID,
       createdAt: new Date(), 
       updatedAt: new Date() 
-    
     });
 
-    res.status(200).send('Everything ok');
+    res.status(201).send('Post created');
   }
 });
 
@@ -166,13 +162,10 @@ app.get('/categories/get', (req,res) => {
   
 });
 
-app.post('/posts/comments', async(req, res) => {
+app.post('/posts/comments', isAuth, async(req, res, next) => {
   let err = validator.validateComment(req);
 
-  if(!isAuth(req)){
-    res.status(400).json({ errors : "Not logged" });
-  }
-  else if (err.length > 0){
+  if (err.length > 0){
     res.status(400).json({ errors : err });
   } 
   else{
@@ -185,9 +178,9 @@ app.post('/posts/comments', async(req, res) => {
       createdAt: new Date(), 
     });
 
-    res.status(200).send('Everything ok');
-  }
-});
+    res.status(400).json({ message: "ok" });
+
+}});
 
 app.delete('/posts/comments/:commentId', (req, res) => {
 
@@ -222,6 +215,10 @@ app.delete('/posts/comments/:commentId', (req, res) => {
         "Message" : "Not authorized.",
       })
     }
+});
+
+app.use(function(req, res, next) {
+  res.status(404).json({message: "Wrong url path or request type"});
 });
 
 app.listen(PORT, () => {
