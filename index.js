@@ -55,14 +55,14 @@ function isAuth(req, res, next) {
   }
 };
 
-const isCreator = (req, params) => {
-  console.log(req.session.userid)
-  console.log(req.body.id)
-  if(isAuth(req) && req.session.userid == params) {
-    return true;
+const isCreator = (req, res, next) => {
+  if( req.session.userid == req.params.commentId) {
+    console.log("Right user");
+    next()
   }
   else {
-    return false;
+    console.log("Wrong user");
+    res.status(401).json({message: "Wrong user"});
   }
 };
 
@@ -149,7 +149,7 @@ app.post('/posts', isAuth, async (req, res, next) => {
   }
 });
 
-app.get('/categories/get', (req,res) => {
+app.get('/categories', (req,res) => {
   let Category = database.category;
 
   Category.findAll(
@@ -182,9 +182,8 @@ app.post('/posts/comments', isAuth, async(req, res, next) => {
 
 }});
 
-app.delete('/posts/comments/:commentId', (req, res) => {
-
-  if(isCreator(req, req.params.commentId)){
+app.delete('/posts/comments/:commentId',isAuth, isCreator, (req, res, next) => {
+  
     let Comment = database.comment;
     Comment.destroy({
       where: {
@@ -210,12 +209,7 @@ app.delete('/posts/comments/:commentId', (req, res) => {
       })
     });
   }
-  else{
-      res.status(400).json({
-        "Message" : "Not authorized.",
-      })
-    }
-});
+);
 
 app.use(function(req, res, next) {
   res.status(404).json({message: "Wrong url path or request type"});
