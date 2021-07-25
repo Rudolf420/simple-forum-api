@@ -55,8 +55,10 @@ function isAuth(req, res, next) {
   }
 };
 
-const isCreator = (req, res, next) => {
-  if( req.session.userid == req.params.commentId) {
+const isCreator = async (req, res, next) => {
+  
+  
+  if( req.session.userid == req.params.id) {
     console.log("Right user");
     next()
   }
@@ -99,10 +101,8 @@ app.post("/users/register", async (req, res) => {
     });
 
     res.status(200).send('User registered');
+    }
   }
-}
-
-  
 });
 
 app.post('/users/login', function(req, res, next) {
@@ -145,8 +145,35 @@ app.post('/posts', isAuth, async (req, res, next) => {
       updatedAt: new Date() 
     });
 
-    res.status(201).send('Post created');
+    res.status(201).json({ message: "Post created" });
   }
+});
+
+app.delete('/posts/:id', isAuth, isCreator, async (req, res, next) => {
+  let Post = database.post;
+    Post.destroy({
+      where: {
+          id: req.params.id
+      }
+    }).then(function(item){
+      if(item > 0){
+        res.json({
+          "Message" : "Post deleted",
+          "Item" : item
+        });
+    } else{
+      res.json({
+        "Message" : "Post doesnt exist!",
+        "Item" : item
+      });
+    }
+    }).catch(function (err) {
+      console.log(err);
+      res.json({
+        "Message" : "Post not deleted!",
+        "Err" : err
+      })
+    });
 });
 
 app.get('/categories', (req,res) => {
@@ -178,16 +205,42 @@ app.post('/posts/comments', isAuth, async(req, res, next) => {
       createdAt: new Date(), 
     });
 
-    res.status(400).json({ message: "ok" });
+    res.status(201).json({ message: "Comment created" });
 
-}});
+  }
+});
 
-app.delete('/posts/comments/:commentId',isAuth, isCreator, (req, res, next) => {
+app.get('/posts/:categoryId', async(req, res, next) => {
+  let Post = database.post;
+
+  Post.findAll({
+                offset: req.query.page * 10,
+                limit: 10, 
+                where: {
+                  categoryID: req.params.categoryId 
+                }
+  }).then(function(posts){
+
+    if( posts.length > 0 ){
+      res.json({
+        posts: posts
+      }).status(200);
+    }
+    else {
+      res.json({"message": "no posts found"}).status(404);
+    }
+  }).catch(function(error){
+    console.log(error);
+  });
+
+});
+
+app.delete('/posts/comments/:id',isAuth, isCreator, (req, res, next) => {
   
     let Comment = database.comment;
     Comment.destroy({
       where: {
-          id: req.params.commentId
+          id: req.params.id
       }
     }).then(function(item){
       if(item > 0){
