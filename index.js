@@ -266,10 +266,10 @@ app.get('/posts/:categoryId', async(req, res, next) => {
   let Post = database.post;
 
   Post.findAll({
-                offset: req.query.page * 10,
+                offset: (((req.query.page||1)-1) * 10),
                 limit: 10, 
                 where: {
-                  categoryID: req.params.categoryId 
+                  categoryid: req.params.categoryId 
                 }
   }).then(function(posts){
 
