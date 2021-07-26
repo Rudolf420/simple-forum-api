@@ -1,4 +1,13 @@
 module.exports = {
+    validateReply: (req) => {
+        req.checkBody('text', 'Text is required').notEmpty();
+        req.checkBody('text','Max lenght is 100').isLength({max: 100});
+
+        let errors = req.validationErrors();
+    
+        return errors;
+    },
+
     validateComment: (req) => {
         req.checkBody('postid', 'Post Id is required').notEmpty();
         req.checkBody('text', 'Text is required').notEmpty();

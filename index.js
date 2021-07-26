@@ -55,8 +55,21 @@ function isAuth(req, res, next) {
   }
 };
 
+async function findItem(id, database) {
+ const item =  await database.findOne({
+    where: {
+      id: id
+    }
+  });
+
+  if(item) {
+    return item
+  }
+  else
+    return null
+}
+
 const isCreator = async (req, res, next) => {
-  
   
   if( req.session.userid == req.params.id) {
     console.log("Right user");
@@ -263,6 +276,29 @@ app.delete('/posts/comments/:id',isAuth, isCreator, (req, res, next) => {
     });
   }
 );
+
+app.post('/posts/comments/replies/:commentId', isAuth, async(req, res, next) => {
+  let err = validator.validateReply(req);
+
+  if (err.length > 0){
+    res.status(400).json({ errors : err });
+  } 
+  else if(findItem(database.comment) == null){
+    res.status(404).json({errors: "Not found comment."})
+  }
+  else{
+    let Reply = database.reply;
+    let { text } = req.body;  
+    await Reply.create({ 
+      text: text, 
+      userid: req.session.userid,
+      commentid: req.params.commentId,
+      createdAt: new Date(), 
+    });
+
+    res.status(201).json({ message: "Comment created" });
+  }
+});
 
 app.use(function(req, res, next) {
   res.status(404).json({message: "Wrong url path or request type"});
