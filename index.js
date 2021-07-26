@@ -69,9 +69,48 @@ async function findItem(id, database) {
     return null
 }
 
-const isCreator = async (req, res, next) => {
-  
-  if( req.session.userid == req.params.id) {
+async function isPostCreator(req, res, next){
+  let Post = database.post;
+  const item = await Post.findOne({
+    where: {
+      id: req.params.id
+    }
+  })
+  if(item && item.userid == req.session.userid) {
+    console.log("Right user");
+    next()
+  }
+  else {
+    console.log("Wrong user");
+    res.status(401).json({message: "Wrong user"});
+  }
+};
+
+async function isCommentCreator(req, res, next){
+  let Comment = database.comment;
+  const item = await Comment.findOne({
+    where: {
+      id: req.params.id
+    }
+  })
+  if(item && item.userid == req.session.userid) {
+    console.log("Right user");
+    next()
+  }
+  else {
+    console.log("Wrong user");
+    res.status(401).json({message: "Wrong user"});
+  }
+};
+
+async function isReplyCreator(req, res, next){
+  let Reply = database.reply;
+  const item = await Reply.findOne({
+    where: {
+      id: req.params.id
+    }
+  })
+  if(item && item.userid == req.session.userid) {
     console.log("Right user");
     next()
   }
@@ -148,12 +187,12 @@ app.post('/posts', isAuth, async (req, res, next) => {
   } 
   else {
     let Post = database.post;
-    let { title, text, categoryID } = req.body;  
+    let { title, text, categoryid } = req.body;  
     await Post.create({ 
       title: title, 
       text: text, 
-      userID: req.session.userid,
-      categoryID: categoryID,
+      userid: req.session.userid,
+      categoryid: categoryid,
       createdAt: new Date(), 
       updatedAt: new Date() 
     });
@@ -162,7 +201,7 @@ app.post('/posts', isAuth, async (req, res, next) => {
   }
 });
 
-app.delete('/posts/:id', isAuth, isCreator, async (req, res, next) => {
+app.delete('/posts/:id', isAuth, isPostCreator, async (req, res, next) => {
   let Post = database.post;
     Post.destroy({
       where: {
@@ -248,7 +287,7 @@ app.get('/posts/:categoryId', async(req, res, next) => {
 
 });
 
-app.delete('/posts/comments/:id',isAuth, isCreator, (req, res, next) => {
+app.delete('/posts/comments/:id',isAuth, isCommentCreator, (req, res, next) => {
   
     let Comment = database.comment;
     Comment.destroy({
@@ -299,6 +338,35 @@ app.post('/posts/comments/replies/:commentId', isAuth, async(req, res, next) => 
     res.status(201).json({ message: "Comment created" });
   }
 });
+
+app.delete('/posts/comments/replies/:id',isAuth, isReplyCreator, (req, res, next) => {
+  
+  let Reply = database.reply;
+  Reply.destroy({
+    where: {
+        id: req.params.id
+    }
+  }).then(function(item){
+    if(item > 0){
+      res.json({
+        "Message" : "Comment deleted!",
+        "Item" : item
+      });
+  } else{
+    res.json({
+      "Message" : "Comment doesnt exist!",
+      "Item" : item
+    });
+  }
+  }).catch(function (err) {
+    console.log(err);
+    res.json({
+      "Message" : "Comment not deleted!",
+      "Err" : err
+    })
+  });
+}
+);
 
 app.use(function(req, res, next) {
   res.status(404).json({message: "Wrong url path or request type"});

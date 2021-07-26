@@ -14,7 +14,7 @@ module.exports = function( sequelize ) {
             allowNull: false,
             unique: false
         },
-        userID: {
+        userid: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: 'users', 
@@ -24,7 +24,7 @@ module.exports = function( sequelize ) {
             type: DataTypes.TEXT,
             allowNull: false,
         },
-        categoryID: {
+        categoryid: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: 'categories', 
