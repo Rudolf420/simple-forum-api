@@ -9,6 +9,10 @@ module.exports = function( sequelize ) {
             unique: true,
             autoIncrement: true
         },
+        likes: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
         postid: {
             type: DataTypes.INTEGER,
             allowNull: false,

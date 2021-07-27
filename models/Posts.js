@@ -14,6 +14,10 @@ module.exports = function( sequelize ) {
             allowNull: false,
             unique: false
         },
+        likes: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
         userid: {
             type: DataTypes.INTEGER,
             allowNull: false,

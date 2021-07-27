@@ -21,6 +21,10 @@ module.exports = function( sequelize ) {
             references: 'users', 
             referencesKey: 'id' 
         },
+        likes: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
         text: {
             type: DataTypes.TEXT,
             allowNull: false,
